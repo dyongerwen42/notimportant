@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>$PDTER: The Tool that Stops Tokens From Dying</title>
-    <meta name="description" content="$PDTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
-    <meta name="keywords" content="$PDTER, crypto, Solana, Pump.fun, utility token, buyback, degen, crypto tool, trading terminal, buy pressure, anti bleed">
-    <meta name="author" content="The $PDTER Project">
+    <title>$PBTER: The Tool that Stops Tokens From Dying</title>
+    <meta name="description" content="$PBTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
+    <meta name="keywords" content="$PBTER, crypto, Solana, Pump.fun, utility token, buyback, degen, crypto tool, trading terminal, buy pressure, anti bleed">
+    <meta name="author" content="The $PBTER Project">
     
-    <meta property="og:title" content="$PDTER: The Tool that Stops Tokens From Dying">
-    <meta property="og:description" content="$PDTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
+    <meta property="og:title" content="$PBTER: The Tool that Stops Tokens From Dying">
+    <meta property="og:description" content="$PBTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.pumpbumpterminal.com">
     <meta property="og:image" content="2.jpeg">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="$PDTER: The Tool that Stops Tokens From Dying">
-    <meta name="twitter:description" content="$PDTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
+    <meta name="twitter:title" content="$PBTER: The Tool that Stops Tokens From Dying">
+    <meta name="twitter:description" content="$PBTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
     <meta name="twitter:image" content="2.jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,7 +47,7 @@
 
         html, body {
             width: 100%;
-            height: auto; /* Allow content to define height */
+            height: auto;
             background-color: var(--bg-dark);
             color: var(--text-color);
             font-family: 'Inter', sans-serif;
@@ -60,28 +60,24 @@
             z-index: -1;
         }
 
-        /* On mobile, container is just a simple wrapper */
         #presentation-container { 
             width: 100%; 
-            padding: 1rem; /* Give some space around the content */
-            padding-top: 6rem; /* Space below the fixed back button */
+            padding: 1rem;
+            padding-top: 6rem;
         }
         
-        /* On mobile, slides are stacked blocks */
         .slide {
             position: relative;
             height: auto;
             margin-bottom: 2rem;
-            /* All slides visible by default on mobile */
             opacity: 1; 
             visibility: visible;
             transform: none;
-            display: flex; /* keep flex for alignment */
+            display: flex;
             flex-direction: column;
         }
         
         .animated-text > * {
-            /* No animations needed for stacked mobile view */
             opacity: 1; transform: none;
         }
 
@@ -94,7 +90,7 @@
             display: flex; 
             justify-content: center; 
             align-items: center;
-            padding: 1.5rem; /* Reduced padding for mobile */
+            padding: 1.5rem;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
@@ -103,8 +99,8 @@
 
         .content-wrapper { 
             display: flex; 
-            flex-direction: column; /* Stacked layout */
-            gap: 1.5rem; /* Reduced gap */
+            flex-direction: column;
+            gap: 1.5rem;
             width: 100%; 
         }
         
@@ -112,7 +108,7 @@
         .image-content { width: 100%; }
         .slide-img { 
             max-width: 100%; 
-            max-height: 250px; /* Constrain image height */
+            max-height: 250px;
             border-radius: 8px; 
             margin: 0 auto;
         }
@@ -122,11 +118,11 @@
             color: var(--cyan); 
             margin-bottom: 0.75rem; 
             text-shadow: 0 0 5px var(--glow-color);
-            word-wrap: break-word; /* Prevent overflow */
-            animation: none; /* Disable glitch on mobile */
+            word-wrap: break-word;
+            animation: none;
         }
-        h1 { font-size: 1.8rem; line-height: 1.2; } /* Mobile font size */
-        h2 { font-size: 1.5rem; line-height: 1.3; } /* Mobile font size */
+        h1 { font-size: 1.8rem; line-height: 1.2; }
+        h2 { font-size: 1.5rem; line-height: 1.3; }
         h3 { font-size: 1rem; }
         
         .tagline { 
@@ -135,7 +131,7 @@
         }
         
         p, li { 
-            font-size: 0.95rem; /* Mobile font size */
+            font-size: 0.95rem;
             line-height: 1.6;
             color: #cdd6f4; 
         }
@@ -159,11 +155,12 @@
         .presenter-notes h3 { font-size: 0.9rem; }
         .presenter-notes p { font-size: 0.9rem; }
 
-        /* Hide desktop navigation on mobile */
-        .nav-arrow, #progress-bar { display: none; }
+        .nav-arrow, #progress-bar { 
+            display: none; 
+        }
         
         .back-button {
-            position: fixed; /* Keep it accessible */
+            position: fixed;
             top: 1rem; left: 1rem;
             z-index: 100; 
             font-family: 'Share Tech Mono', monospace; 
@@ -184,18 +181,17 @@
         @media (min-width: 768px) {
             html, body {
                 height: 100%;
-                overflow: hidden; /* Revert to fixed slide deck */
+                overflow: hidden;
             }
 
             #presentation-container {
                 height: 100%;
-                padding: 0; /* Remove padding for full-screen view */
+                padding: 0;
             }
             
             .slide {
                 width: 100%; height: 100%; position: absolute; top: 0; left: 0;
                 display: flex; flex-direction: column; padding: 2rem 2.5rem;
-                /* Restore slide deck functionality */
                 opacity: 0; visibility: hidden;
                 transform: translateY(30px) scale(0.98);
                 transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -217,12 +213,12 @@
             .active-slide .animated-text > *:nth-child(5) { transition-delay: 1.1s; }
             
             .slide-content {
-                padding: 2.5rem 4.5rem; /* Restore desktop padding */
+                padding: 2.5rem 4.5rem;
             }
              .slide-content::before { display: block; }
             
             .content-wrapper {
-                flex-direction: row; /* Side-by-side layout */
+                flex-direction: row;
                 gap: 4rem;
             }
 
@@ -236,9 +232,24 @@
             .presenter-notes h3 { font-size: 1rem; }
             .presenter-notes p { font-size: 0.95rem; }
 
-            /* Restore desktop navigation */
-            .nav-arrow { display: flex; }
-            #progress-bar { display: block; }
+            .nav-arrow { 
+                display: flex;
+                position: fixed; top: 50%; transform: translateY(-50%); z-index: 10;
+                background: var(--cyan); color: var(--bg-dark); border: 2px solid var(--cyan);
+                border-radius: 50%; width: 44px; height: 44px; font-size: 1.5rem; 
+                cursor: pointer; transition: all 0.3s ease; justify-content: center; 
+                align-items: center; opacity: 0.7;
+                box-shadow: 0 0 15px var(--glow-color);
+            }
+            .nav-arrow:hover { opacity: 1; transform: translateY(-50%) scale(1.1); }
+            
+            #progress-bar { 
+                display: block;
+                position: fixed; bottom: 0; left: 0; height: 4px; 
+                background: linear-gradient(90deg, var(--pink), var(--cyan));
+                box-shadow: 0 0 10px var(--glow-color);
+                width: 0; transition: width 0.5s ease-out; z-index: 20;
+            }
             #prev-slide { left: 1.5rem; } 
             #next-slide { right: 1.5rem; }
 
@@ -248,6 +259,23 @@
 </head>
 <body>
 
+    <div style="background: linear-gradient(90deg, var(--purple), var(--cyan)); padding: 1rem; text-align: center; border-bottom: 2px solid var(--cyan); box-shadow: 0 4px 20px var(--glow-color); position: relative; z-index: 101;">
+        <div style="max-width: 900px; margin: auto; color: var(--bg-dark); font-family: 'Inter', sans-serif;">
+            <h2 style="font-family: 'Share Tech Mono', monospace; font-size: 1.5rem; margin: 0 0 0.5rem 0; text-shadow: none; animation: none; color: #fff;">
+                Official Launch Incoming!
+            </h2>
+            <p style="margin: 0; font-size: 1.1rem; line-height: 1.5; font-weight: bold;">
+                Our official coin launches tomorrow, Saturday, July 12th, at 9:00 PM CET (20:00 UTC).
+            </p>
+            <p style="margin: 0.75rem 0; font-size: 1rem; line-height: 1.4; background: rgba(255, 255, 0, 0.8); color: #000; padding: 0.5rem; border-radius: 6px; font-weight: bold;">
+                <span style="font-size: 1.5rem; vertical-align: middle; margin-right: 0.5rem;">⚠️</span>
+                BEWARE: All other tokens are fake. Only trust information from our official channels.
+            </p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 1rem; line-height: 1.5;">
+                Read our <a href="https://x.com/PB_terminal" target="_blank" style="color: #fff; text-decoration: underline; font-weight: bold;">official Twitter</a> for the real launch link and contract address.
+            </p>
+        </div>
+    </div>
     <a href="index.html" class="back-button">&lt;&lt; Back to Main Site</a>
     
     <canvas id="animated-bg"></canvas>
@@ -276,7 +304,7 @@
                         <p>This creates a simple, powerful loop:</p>
                         <ul>
                             <li>You use the tool to protect a token from bleeding out.</li>
-                            <li>The fee from that action <strong>automatically buys $PDTER</strong>.</li>
+                            <li>The fee from that action <strong>automatically buys $PBTER</strong>.</li>
                         </ul>
                     </div>
                     <div class="image-content animated-text">
@@ -286,7 +314,7 @@
             </div>
             <div class="presenter-notes">
                 <h3>PRESENTER'S SCRIPT:</h3>
-                <p>"This is our core utility, the 'Heartbeat Monitor.' It prevents the slow bleed. Every time it's used to save a token, the fee is automatically converted into a buy order for $PDTER. The tool's function is directly linked to the token's value. More protection means more buy pressure. It's that simple."</p>
+                <p>"This is our core utility, the 'Heartbeat Monitor.' It prevents the slow bleed. Every time it's used to save a token, the fee is automatically converted into a buy order for $PBTER. The tool's function is directly linked to the token's value. More protection means more buy pressure. It's that simple."</p>
             </div>
         </section>
 
@@ -296,7 +324,7 @@
                     <div class="text-content animated-text">
                         <h2>Use Case 1: The Attack</h2>
                         <p><strong>The Action:</strong> You launch a new token and use our tool to create non-stop activity, making the chart look strong.</p>
-                        <p><strong>The Link:</strong> For every strategic buy you place, a fee is converted into a <strong>direct buy order for $PDTER</strong>.</p>
+                        <p><strong>The Link:</strong> For every strategic buy you place, a fee is converted into a <strong>direct buy order for $PBTER</strong>.</p>
                         <p><strong>The Result:</strong> Promoting another project automatically pumps our token.</p>
                     </div>
                      <div class="image-content animated-text">
@@ -306,7 +334,7 @@
             </div>
             <div class="presenter-notes">
                 <h3>PRESENTER'S SCRIPT:</h3>
-                <p>"Here's the offensive use case. You're launching a token and need to project strength. You use our tool to create constant activity. Each of those actions generates a fee that automatically buys $PDTER. Your marketing campaign for another token directly fuels ours."</p>
+                <p>"Here's the offensive use case. You're launching a token and need to project strength. You use our tool to create constant activity. Each of those actions generates a fee that automatically buys $PBTER. Your marketing campaign for another token directly fuels ours."</p>
             </div>
         </section>
 
@@ -316,8 +344,8 @@
                     <div class="text-content animated-text">
                         <h2>Use Case 2: The Shield</h2>
                         <p><strong>The Action:</strong> You use the tool to protect your own investment in another token from bleeding out.</p>
-                        <p><strong>The Link:</strong> For every defensive action, a fee is converted into a <strong>direct buy order for $PDTER</strong>.</p>
-                        <p><strong>The Result:</strong> Protecting your other bags simultaneously builds the floor of $PDTER.</p>
+                        <p><strong>The Link:</strong> For every defensive action, a fee is converted into a <strong>direct buy order for $PBTER</strong>.</p>
+                        <p><strong>The Result:</strong> Protecting your other bags simultaneously builds the floor of $PBTER.</p>
                     </div>
                     <div class="image-content animated-text">
                         <img class="slide-img" src="4.jpeg" alt="Defensive shield protecting the token price floor">
@@ -326,7 +354,7 @@
             </div>
             <div class="presenter-notes">
                 <h3>PRESENTER'S SCRIPT:</h3>
-                <p>"And here's the defensive case. You'sre not launching, you're just trying to protect your investment. You use our tool to defend a price level. Again, every action generates a fee that buys $PDTER. Shielding one investment builds another."</p>
+                <p>"And here's the defensive case. You'sre not launching, you're just trying to protect your investment. You use our tool to defend a price level. Again, every action generates a fee that buys $PBTER. Shielding one investment builds another."</p>
             </div>
         </section>
         
@@ -346,7 +374,7 @@
             </div>
             <div class="presenter-notes">
                 <h3>PRESENTER'S SCRIPT:</h3>
-                <p>"As a holder of $PDTER, every single user of our tool helps increase the value of your asset. Their actions, for their own benefit, feed back into the machine that benefits you."</p>
+                <p>"As a holder of $PBTER, every single user of our tool helps increase the value of your asset. Their actions, for their own benefit, feed back into the machine that benefits you."</p>
             </div>
         </section>
 
@@ -358,7 +386,7 @@
                         <p>In our ecosystem, no value is leaked:</p>
                         <ul>
                             <li><strong>Utility (the tool)</strong> creates value (fees).</li>
-                            <li><strong>Token ($PDTER)</strong> captures 100% of that value (buybacks).</li>
+                            <li><strong>Token ($PBTER)</strong> captures 100% of that value (buybacks).</li>
                             <li>A <strong>stronger token</strong> finances even better utility.</li>
                         </ul>
                          <p>It's a closed, self-reinforcing system.</p>
@@ -379,8 +407,8 @@
                  <div class="content-wrapper">
                     <div class="text-content animated-text">
                         <h2>Why the Token IS the Entire Machine</h2>
-                        <p>Without <strong>$PDTER</strong>, the fee is just a cost that disappears into a company's pocket.</p>
-                        <p>With <strong>$PDTER</strong>, that same fee becomes an <strong>investment into an asset that you and the community own.</strong></p>
+                        <p>Without <strong>$PBTER</strong>, the fee is just a cost that disappears into a company's pocket.</p>
+                        <p>With <strong>$PBTER</strong>, that same fee becomes an <strong>investment into an asset that you and the community own.</strong></p>
                         <p style="color: var(--cyan); font-size:1.2rem;">The token transforms a 'service cost' into 'shared value'.</p>
                     </div>
                     <div class="image-content animated-text">
@@ -424,7 +452,7 @@
                     <p class="tagline">Our future isn't a bloated 'ecosystem'. It's about upgrading our core utility. Every new feature has two simple goals:</p>
                     <ol style="list-style-type: decimal; padding-left: 20px; text-align: left; max-width: 600px; margin: 1.5rem auto; font-family: 'Share Tech Mono', monospace;">
                         <li style="margin-bottom: 1rem; padding-left: 1rem;">Give users a real strategic advantage.</li>
-                        <li style="padding-left: 1rem;">Generate more fees to fuel the $PDTER engine.</li>
+                        <li style="padding-left: 1rem;">Generate more fees to fuel the $PBTER engine.</li>
                     </ol>
                 </div>
             </div>
@@ -441,7 +469,7 @@
                         <h2>Roadmap Feature #1: The "Dump Matcher"</h2>
                         <p><strong>The Problem:</strong> A large, sudden sell order causes panic.</p>
                         <p><strong>The Feature:</strong> An option to "match" any sell over a certain size with an <strong>instant buy of the same amount.</strong></p>
-                        <p><strong>The Result:</strong> Dumps get neutralized on the chart, showing immense strength and generating a large fee for the $PDTER buyback engine.</p>
+                        <p><strong>The Result:</strong> Dumps get neutralized on the chart, showing immense strength and generating a large fee for the $PBTER buyback engine.</p>
                     </div>
                     <div class="image-content animated-text">
                         <img class="slide-img" src="10.jpeg" alt="A large red candle being erased by a Dump Matcher tool">
@@ -461,7 +489,7 @@
                         <h2>Roadmap Feature #2: The "Squad Buy"</h2>
                         <p><strong>The Problem:</strong> Coordinating a group buy is messy and ineffective.</p>
                         <p><strong>The Feature:</strong> A tool for groups to 'arm' their wallets and execute a buy order <strong>at the exact same moment.</strong></p>
-                        <p><strong>The Result:</strong> Creates a single, giant green candle on the chart and a concentrated wave of buybacks for $PDTER.</p>
+                        <p><strong>The Result:</strong> Creates a single, giant green candle on the chart and a concentrated wave of buybacks for $PBTER.</p>
                     </div>
                     <div class="image-content animated-text">
                         <img class="slide-img" src="9.jpeg" alt="A squad of figures ready to act together">
@@ -481,7 +509,7 @@
                         <h2>Roadmap Feature #3: The "Smart Accumulator"</h2>
                         <p><strong>The Problem:</strong> Buying a large position often drives the price up on yourself.</p>
                         <p><strong>The Feature:</strong> An intelligent DCA mode that <strong>automatically and discreetly buys local dips</strong> for you.</p>
-                        <p><strong>The Result:</strong> You build your position at a better average price, while creating a steady stream of buybacks for $PDTER.</p>
+                        <p><strong>The Result:</strong> You build your position at a better average price, while creating a steady stream of buybacks for $PBTER.</p>
                     </div>
                     <div class="image-content animated-text">
                         <img class="slide-img" src="6.jpeg" alt="A bag of coins being slowly filled">
@@ -516,7 +544,7 @@
                     <p class="tagline"><strong>Option A:</strong> Invest in a story and hope the chart follows.<br><strong>Option B:</strong> Invest in an on-chain, self-reinforcing buy-machine.</p>
                     <p style="margin-top: 2rem; font-size:1.2rem;">The choice is yours.</p>
                     <div style="margin-top: 2.5rem; display: flex; justify-content: center; gap: 2.5rem;">
-                        <a href="https://t.me/PB_terminal" title="Telegram">
+                        <a href="https://t.me/pumpbump" title="Telegram">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 L11 13 L2 9 L22 2 Z M22 2 L15 22 L11 13 L2 9 L22 2 Z"></path></svg>
                         </a> 
                         <a href="https://x.com/PB_terminal" title="Twitter/X">
@@ -544,7 +572,7 @@
             const isDesktop = () => window.innerWidth >= 768;
 
             if (!isDesktop()) {
-                // If on mobile, do nothing. All slides are already visible.
+                // On mobile, do nothing. All slides are visible for scrolling.
                 return;
             }
 
