@@ -5,26 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PUMPDUMP//TERMINAL</title>
     
-    <!-- SEO & Social Media Meta Tags -->
     <meta name="description" content="The PUMPDUMP//TERMINAL is a strategic tool for Solana traders to support tokens by creating consistent buying pressure and defending price floors.">
     <meta name="keywords" content="PumpDump, Pump.fun, Solana, crypto, trading bot, buying pressure, crypto terminal, degen, token launch">
     <meta name="author" content="PumpBump">
     
-    <!-- Open Graph (for Facebook, Telegram, Discord, etc.) -->
     <meta property="og:title" content="PUMPDUMP//TERMINAL">
     <meta property="og:description" content="A strategic tool for Solana traders to support tokens by creating consistent buying pressure and defending price floors.">
     <meta property="og:type" content="website">
-    <!-- IMPORTANT: Replace with your actual URL -->
     <meta property="og:url" content="https://www.pumpbumpterminal.com">
-    <!-- IMPORTANT: Replace with a URL to a preview image (e.g., 1200x630px) -->
     <meta property="og:image" content="og.png"> 
     
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PUMPDUMP//TERMINAL">
     <meta name="twitter:description" content="A strategic tool for Solana traders to support tokens by creating consistent buying pressure and defending price floors.">
-     <!-- IMPORTANT: Replace with a URL to a preview image -->
-    <meta name="twitter:image" content="og.png">
+     <meta name="twitter:image" content="og.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -68,10 +62,9 @@
     <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-3"></div>
 
     <div id="app-container">
-        <header class="flex justify-between items-center p-4 container mx-auto max-w-7xl">
-            <img src="/logo.png" alt="PumpBump Terminal Logo" class="h-18 sm:h-20">
+        <header class="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 sm:gap-0 container mx-auto max-w-7xl">
+            <img src="/logo.png" alt="PumpBump Terminal Logo" class="h-16 sm:h-20">
             <div class="flex items-center space-x-4 md:space-x-6">
-                <!-- NEW BUTTON ADDED HERE -->
                 <a href="/presentation.html" class="btn btn-primary py-1 px-3 rounded-lg text-xs md:text-sm whitespace-nowrap">[Presentation]</a>
                 <div class="flex items-center space-x-4 md:space-x-6">
                     <a href="https://x.com/PB_terminal" target="_blank" class="text-gray-400 social-link transition-all duration-300">
@@ -84,8 +77,8 @@
             </div>
         </header>
         
-        <main class="flex-grow container mx-auto px-4 pb-4 max-w-7xl min-h-0">
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
+        <main class="flex-grow container mx-auto px-4 py-8 sm:pb-4 max-w-7xl min-h-0">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-6 h-full">
                 <div id="config-panel" class="lg:col-span-2 transition-opacity duration-500">
                     <div class="glass-panel p-6 rounded-xl shadow-lg h-full flex flex-col">
                         <div class="scanline"></div>
@@ -145,14 +138,14 @@
                                 <label for="maxAmount" class="block text-sm font-medium text-gray-300 mb-1">Max Total SOL Spend</label>
                                 <input type="number" id="maxAmount" name="maxAmount" step="0.01" min="0.01" placeholder="e.g., 1.5" class="input-field w-full rounded-lg py-2 px-3 text-sm" required>
                             </div>
-                            <div class="pt-2 flex space-x-4">
+                            <div class="pt-2 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                                 <button type="submit" id="startButton" class="w-full btn btn-primary py-2 px-4 rounded-lg">Engage</button>
                                 <button type="button" id="stopButton" class="w-full btn btn-secondary py-2 px-4 rounded-lg hidden">Abort Mission</button>
                             </div>
                         </form>
                     </div>
                 </div>
-                <div class="lg:col-span-3 flex flex-col gap-6 min-h-0">
+                <div class="lg:col-span-3 flex flex-col gap-8 lg:gap-6 min-h-0">
                     <div class="glass-panel p-6 rounded-xl shadow-lg">
                         <h2 class="text-xl mb-2 border-b-2 border-[var(--border-color)] pb-2" style="color: var(--cyan);">[STRATEGIC_APPLICATIONS]</h2>
                         <div class="space-y-2 text-xs text-gray-300">
@@ -178,7 +171,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="logContainerWrapper" class="glass-panel p-6 rounded-xl shadow-lg flex-grow flex flex-col min-h-0">
+                    <div id="logContainerWrapper" class="glass-panel p-6 rounded-xl shadow-lg flex flex-col min-h-0 h-96 lg:h-auto lg:flex-grow">
                         <h2 class="text-xl mb-4 border-b-2 border-[var(--border-color)] pb-2 blinking-cursor" style="color: var(--cyan);">[EVENT_STREAM]</h2>
                         <div id="logContainer" class="flex-grow overflow-y-auto pr-2 text-sm">
                             <div id="logEntries"></div>
