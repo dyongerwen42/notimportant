@@ -5,7 +5,9 @@
   "main": "server.ts",
   "type": "module",
   "scripts": {
-    "dev": "tsx --watch server.ts"
+    "dev": "tsx --watch server.ts",
+    "build": "tsc",
+    "start": "node build/server.js"
   },
   "dependencies": {
     "@solana/web3.js": "^1.91.9",
