@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>$PDTER: The Tool that Stops Tokens From Dying</title>
+    <meta name="description" content="$PDTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
+    <meta name="keywords" content="$PDTER, crypto, Solana, Pump.fun, utility token, buyback, degen, crypto tool, trading terminal, buy pressure, anti bleed">
+    <meta name="author" content="The $PDTER Project">
+    
+    <meta property="og:title" content="$PDTER: The Tool that Stops Tokens From Dying">
+    <meta property="og:description" content="$PDTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.pumpbumpterminal.com">
+    <meta property="og:image" content="2.jpeg"> <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="$PDTER: The Tool that Stops Tokens From Dying">
+    <meta name="twitter:description" content="$PDTER features a utility built to prevent tokens from slowly bleeding to zero. That very function automatically creates buy pressure for our own token.">
+    <meta name="twitter:image" content="2.jpeg"> <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyan: #00BFFF;
+            --purple: #8A2BE2;
+            --pink: #FF69B4;
+            --green: #39FF14;
+            --bg-dark: #02040a;
+            --bg-panel: rgba(10, 15, 30, 0.65);
+            --border-color: rgba(0, 191, 255, 0.25);
+            --glow-color: rgba(0, 191, 255, 0.5);
+            --text-color: #EAEAEA;
+            --text-muted: #8892b0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        html, body {
+            height: 100%;
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        #animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        #presentation-container { width: 100%; height: 100%; position: relative; }
+        
+        .slide {
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
+            display: flex; flex-direction: column; padding: 2rem 2.5rem;
+            opacity: 0; visibility: hidden;
+            transform: translateY(30px) scale(0.98);
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .slide.active-slide { 
+            transform: translateY(0) scale(1);
+            opacity: 1; 
+            z-index: 2; 
+            visibility: visible; 
+        }
+        
+        .animated-text > * {
+            opacity: 0; transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .active-slide .animated-text > * { opacity: 1; transform: translateY(0); }
+        .active-slide .animated-text > *:nth-child(1) { transition-delay: 0.3s; }
+        .active-slide .animated-text > *:nth-child(2) { transition-delay: 0.5s; }
+        .active-slide .animated-text > *:nth-child(3) { transition-delay: 0.7s; }
+        .active-slide .animated-text > *:nth-child(4) { transition-delay: 0.9s; }
+        .active-slide .animated-text > *:nth-child(5) { transition-delay: 1.1s; }
+
+        .slide-content {
+            flex-grow: 1; 
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
+            border: 1px solid var(--border-color);
+            border-radius: 16px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            padding: 2.5rem 4.5rem; 
+            position: relative; 
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.6), inset 0 0 2px 1px var(--border-color);
+        }
+        
+        .slide-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.1), transparent 20%);
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+            pointer-events: none;
+        }
+        .slide-content:hover::before {
+            opacity: 1;
+        }
+
+        .content-wrapper { display: flex; align-items: center; justify-content: center; gap: 4rem; width: 100%; z-index: 1; }
+        .text-content { flex: 1.2; text-align: left; }
+        .image-content { flex: 1; text-align: center; }
+        .slide-img { max-width: 100%; max-height: 50vh; border-radius: 8px; background-color: rgba(0,0,0,0.3); opacity: 0.9; }
+        
+        h1, h2 { 
+            font-family: 'Share Tech Mono', monospace; 
+            color: var(--cyan); 
+            margin-bottom: 1rem; 
+            text-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color);
+            animation: glitch 5s infinite alternate-reverse;
+        }
+        h1 { font-size: 3.5rem; line-height: 1.1; }
+        h2 { font-size: 2.8rem; line-height: 1.2; }
+        h3 { font-size: 1.3rem; text-transform: uppercase; color: var(--text-color); margin-bottom: 0.75rem; }
+        
+        .tagline { font-size: 1.4rem; color: var(--text-muted); margin-top: 1rem; margin-bottom: 1.5rem; max-width: 800px; margin-left: auto; margin-right: auto;}
+        
+        p, li { font-size: 1.1rem; line-height: 1.8; max-width: 850px; color: #cdd6f4; }
+        ul { list-style: none; padding-left: 0; }
+        ul li { margin-bottom: 1.2rem; padding-left: 2rem; position: relative; font-size: 1.1rem; }
+        ul li::before {
+            content: '>>'; font-family: 'Share Tech Mono', monospace; color: var(--cyan);
+            position: absolute; left: 0;
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+        strong { color: var(--cyan); font-weight: 700; }
+        a { color: var(--pink); text-decoration: none; transition: all 0.3s ease; }
+        a:hover { color: var(--cyan); text-shadow: 0 0 8px var(--glow-color); transform: scale(1.05); }
+        
+        .presenter-notes {
+            flex-shrink: 0; height: 22vh; margin-top: 1.5rem; padding: 1rem 1.5rem;
+            background: rgba(10, 15, 30, 0.5);
+            border: 1px solid rgba(138, 43, 226, 0.2); 
+            border-radius: 12px; 
+            overflow-y: auto;
+        }
+        .presenter-notes h3 { color: var(--purple); margin-bottom: 0.5rem; font-size: 1rem; }
+        .presenter-notes p { font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); font-style: italic; }
+
+        .nav-arrow {
+            position: fixed; top: 50%; transform: translateY(-50%); z-index: 10;
+            background: var(--cyan); color: var(--bg-dark); border: 2px solid var(--cyan);
+            border-radius: 50%; width: 44px; height: 44px; font-size: 1.5rem; 
+            cursor: pointer; transition: all 0.3s ease; display: flex; 
+            justify-content: center; align-items: center; opacity: 0.7;
+            box-shadow: 0 0 15px var(--glow-color);
+        }
+        .nav-arrow:hover { opacity: 1; transform: translateY(-50%) scale(1.1); }
+        #prev-slide { left: 1.5rem; } #next-slide { right: 1.5rem; }
+        
+        #progress-bar {
+            position: fixed; bottom: 0; left: 0; height: 4px; 
+            background: linear-gradient(90deg, var(--pink), var(--cyan));
+            box-shadow: 0 0 10px var(--glow-color);
+            width: 0; transition: width 0.5s ease-out; z-index: 20;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2.5rem;
+            z-index: 100;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            color: var(--cyan);
+            text-decoration: none;
+            background: var(--bg-panel);
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            color: var(--bg-dark);
+            background: var(--cyan);
+            box-shadow: 0 0 15px var(--glow-color);
+        }
+
+        @keyframes glitch {
+            2%,64% { transform: translate(2px,0) skew(0deg); }
+            4%,60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-button">&lt;&lt; Back to Main Site</a>
+    
+    <canvas id="animated-bg"></canvas>
+    <main id="presentation-container">
+
+        <section class="slide">
+            <div class="slide-content" style="text-align:center;">
+                <div class="animated-text">
+                    <h1>The Tool that Stops Slow Bleeds</h1>
+                    <p class="tagline">The #1 problem in crypto isn't a rug pull. It's watching your investment silently bleed to zero when volume dries up.</p>
+                    <p>We built the tool that fixes this.</p>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"Let's be direct. The biggest problem in crypto is watching your investment slowly bleed to zero because volume dries up. We built a tool to stop that. This presentation is about how that tool not only saves other tokens, but also creates constant, automatic buy pressure for our own."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-content">
+                <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>Our Tool is an Anti-Bleed Engine</h2>
+                        <p>Our 'Heartbeat Monitor' lets anyone set up automated micro-buys to keep a chart active. It's life support for a token.</p>
+                        <p>This creates a simple, powerful loop:</p>
+                        <ul>
+                            <li>You use the tool to protect a token from bleeding out.</li>
+                            <li>The fee from that action <strong>automatically buys $PDTER</strong>.</li>
+                        </ul>
+                    </div>
+                    <div class="image-content animated-text">
+                        <img class="slide-img" alt="Heartbeat Monitor showing a chart going from flatline to active">
+                    </div>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"This is our core utility, the 'Heartbeat Monitor.' It prevents the slow bleed. Every time it's used to save a token, the fee is automatically converted into a buy order for $PDTER. The tool's function is directly linked to the token's value. More protection means more buy pressure. It's that simple."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-content">
+                <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>Use Case 1: The Attack</h2>
+                        <p><strong>The Action:</strong> You launch a new token and use our tool to create non-stop activity, making the chart look strong.</p>
+                        <p><strong>The Link:</strong> For every strategic buy you place, a fee is converted into a <strong>direct buy order for $PDTER</strong>.</p>
+                        <p><strong>The Result:</strong> Promoting another project automatically pumps our token.</p>
+                    </div>
+                     <div class="image-content animated-text">
+                        <img class="slide-img" alt="Offensive action creating a direct buy for the token">
+                    </div>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"Here's the offensive use case. You're launching a token and need to project strength. You use our tool to create constant activity. Each of those actions generates a fee that automatically buys $PDTER. Your marketing campaign for another token directly fuels ours."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-content">
+                <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>Use Case 2: The Shield</h2>
+                        <p><strong>The Action:</strong> You use the tool to protect your own investment in another token from bleeding out.</p>
+                        <p><strong>The Link:</strong> For every defensive action, a fee is converted into a <strong>direct buy order for $PDTER</strong>.</p>
+                        <p><strong>The Result:</strong> Protecting your other bags simultaneously builds the floor of $PDTER.</p>
+                    </div>
+                    <div class="image-content animated-text">
+                        <img class="slide-img" alt="Defensive shield protecting the token price floor">
+                    </div>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"And here's the defensive case. You're not launching, you're just trying to protect your investment. You use our tool to defend a price level. Again, every action generates a fee that buys $PDTER. Shielding one investment builds another."</p>
+            </div>
+        </section>
+        
+      
+
+        <section class="slide">
+            <div class="slide-content">
+                 <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>The Result: Why Your Bag Grows</h2>
+                        <p>Every user of our tool, anywhere in the world, is working for you.</p>
+                        <p>The fee isn't a dividend. It's directly <strong>reinvested into the price of the token you own.</strong></p>
+                        <p>You don't own a share in a company; you own a piece of the buy-machine itself.</p>
+                    </div>
+                    <div class="image-content animated-text">
+                        <img class="slide-img" alt="A growing bag of cryptocurrency coins">
+                    </div>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"As a holder of $PDTER, every single user of our tool helps increase the value of your asset. Their actions, for their own benefit, feed back into the machine that benefits you."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-content">
+                 <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>The Perfect Loop: Value Cannot Escape</h2>
+                        <p>In our ecosystem, no value is leaked:</p>
+                        <ul>
+                            <li><strong>Utility (the tool)</strong> creates value (fees).</li>
+                            <li><strong>Token ($PDTER)</strong> captures 100% of that value (buybacks).</li>
+                            <li>A <strong>stronger token</strong> finances even better utility.</li>
+                        </ul>
+                         <p>It's a closed, self-reinforcing system.</p>
+                    </div>
+                     <div class="image-content animated-text">
+                        <img class="slide-img" alt="Closed-Loop System: Utility -> Fees -> Value">
+                    </div>
+                </div>
+            </div>
+             <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"We engineered a closed loop. The tool generates economic energy as fees. The token acts as a battery, storing that energy through buybacks. A fully charged battery—a strong token—then lets us build better tools. The cycle repeats and strengthens."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+             <div class="slide-content">
+                 <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>Why the Token IS the Entire Machine</h2>
+                        <p>Without <strong>$PDTER</strong>, the fee is just a cost that disappears into a company's pocket.</p>
+                        <p>With <strong>$PDTER</strong>, that same fee becomes an <strong>investment into an asset that you and the community own.</strong></p>
+                        <p style="color: var(--cyan); font-size:1.2rem;">The token transforms a 'service cost' into 'shared value'.</p>
+                    </div>
+                    <div class="image-content animated-text">
+                        <img class="slide-img" alt="Utility providing power to the token battery">
+                    </div>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"Why do we need a token? Without it, the tool is just a service and the fee is a cost. With the token, that same fee is transformed. It's reinvested into an asset that the community collectively owns. It turns a cost into a shared investment."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+             <div class="slide-content">
+                 <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>A Fair Engine, A Fair Start</h2>
+                        <p>A transparent machine deserves a transparent launch.</p>
+                         <ul>
+                            <li><strong>100% Fair Launch:</strong> No pre-sale, no insiders. Everyone bought from the same starting line.</li>
+                            <li><strong>The Team Bought In:</strong> We have our own money in the game, just like you.</li>
+                        </ul>
+                        <p>Our only advantage is the machine we built, and it works for every holder equally.</p>
+                    </div>
+                    <div class="image-content animated-text">
+                        <img class="slide-img" alt="Figures standing at a starting line">
+                    </div>
+                </div>
+            </div>
+             <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"The system is transparent, and so was the launch. It was a 100% fair launch with no pre-sale or insider tokens. Everyone, including the team, bought on the open market. Our incentives are aligned with yours."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+             <div class="slide-content" style="text-align:center;">
+                <div class="animated-text">
+                    <h2>The Roadmap: Better Tools, More Fuel</h2>
+                    <p class="tagline">Our future isn't a bloated 'ecosystem'. It's about upgrading our core utility. Every new feature has two simple goals:</p>
+                    <ol style="list-style-type: decimal; padding-left: 40px; text-align: left; max-width: 600px; margin: 1.5rem auto; font-family: 'Share Tech Mono', monospace;">
+                        <li style="margin-bottom: 1rem;">Give users a real strategic advantage.</li>
+                        <li>Generate more fees to fuel the $PDTER engine.</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"Our roadmap is simple. We don't build random features. Everything we add must give users a strategic edge and generate more fees to fuel the buyback engine. If it doesn't do both, we don't build it."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+             <div class="slide-content">
+                <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>Roadmap Feature #1: The "Dump Matcher"</h2>
+                        <p><strong>The Problem:</strong> A large, sudden sell order causes panic.</p>
+                        <p><strong>The Feature:</strong> An option to "match" any sell over a certain size with an <strong>instant buy of the same amount.</strong></p>
+                        <p><strong>The Result:</strong> Dumps get neutralized on the chart, showing immense strength and generating a large fee for the $PDTER buyback engine.</p>
+                    </div>
+                    <div class="image-content animated-text">
+                        <img class="slide-img" alt="A large red candle being erased by a Dump Matcher tool">
+                    </div>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"First on the roadmap is the 'Dump Matcher.' It counters whale dumps. A user can set it to automatically place a buy order of the exact same size as a large sell. It absorbs the dump instantly, projects strength, and generates a large fee for the engine."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+             <div class="slide-content">
+                <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>Roadmap Feature #2: The "Squad Buy"</h2>
+                        <p><strong>The Problem:</strong> Coordinating a group buy is messy and ineffective.</p>
+                        <p><strong>The Feature:</strong> A tool for groups to 'arm' their wallets and execute a buy order <strong>at the exact same moment.</strong></p>
+                        <p><strong>The Result:</strong> Creates a single, giant green candle on the chart and a concentrated wave of buybacks for $PDTER.</p>
+                    </div>
+                    <div class="image-content animated-text">
+                        <img class="slide-img" alt="A squad of figures ready to act together">
+                    </div>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"Next is the 'Squad Buy.' It weaponizes community action. Instead of a messy, uncoordinated pump, a group can use our tool to fire all their buys in the same block. This creates one giant green candle and a massive, single wave of fees."</p>
+            </div>
+        </section>
+        
+        <section class="slide">
+             <div class="slide-content">
+                <div class="content-wrapper">
+                    <div class="text-content animated-text">
+                        <h2>Roadmap Feature #3: The "Smart Accumulator"</h2>
+                        <p><strong>The Problem:</strong> Buying a large position often drives the price up on yourself.</p>
+                        <p><strong>The Feature:</strong> An intelligent DCA mode that <strong>automatically and discreetly buys local dips</strong> for you.</p>
+                        <p><strong>The Result:</strong> You build your position at a better average price, while creating a steady stream of buybacks for $PDTER.</p>
+                    </div>
+                    <div class="image-content animated-text">
+                        <img class="slide-img" alt="A bag of coins being slowly filled">
+                    </div>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"Finally, the 'Smart Accumulator' is for patient players. It lets you acquire a large position without pumping the price yourself. It automatically buys small amounts during dips and low volume. This provides a better entry for the user and a steady drip of fees for the engine."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-content" style="text-align:center;">
+                <div class="animated-text">
+                    <h2 style="font-size: 1.8rem;">The Entire Pitch in One Sentence</h2>
+                    <blockquote class="tagline" style="font-size: 1.5rem; line-height: 1.5; border-left: 3px solid var(--cyan); padding-left: 2rem; text-align: left; margin-top: 2rem;">
+                       "Our tool stops tokens from bleeding to death, and the fees from that solution are used to non-stop and forever buy our own token."
+                    </blockquote>
+                </div>
+            </div>
+            <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"Let's distill this to its core. If you remember one thing, it's this: Our tool stops tokens from bleeding to death, and the fees from that solution are used to non-stop and forever buy our own token. That's the entire system."</p>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-content" style="text-align:center;">
+                <div class="animated-text">
+                    <h2>The Choice: Hope or Logic?</h2>
+                    <p class="tagline"><strong>Option A:</strong> Invest in a story and hope the chart follows.<br><strong>Option B:</strong> Invest in an on-chain, self-reinforcing buy-machine.</p>
+                    <p style="margin-top: 2rem; font-size:1.5rem;">The choice is yours.</p>
+                    <div style="margin-top: 2.5rem; display: flex; justify-content: center; gap: 2.5rem;">
+                        <a href="#" title="Telegram">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 L11 13 L2 9 L22 2 Z M22 2 L15 22 L11 13 L2 9 L22 2 Z"></path></svg>
+                        </a> 
+                        <a href="https://x.com/PB_terminal" title="Twitter/X">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                        </a> 
+                        <a href="/" title="The Terminal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+             <div class="presenter-notes">
+                <h3>PRESENTER'S SCRIPT:</h3>
+                <p>"So we end with a simple choice. Invest in a story and hope for the best, or invest in a verifiable on-chain machine that works. The choice is yours. Thank you."</p>
+            </div>
+        </section>
+
+    </main>
+    <button id="prev-slide" class="nav-arrow">◀</button>
+    <button id="next-slide" class="nav-arrow">▶</button>
+    <div id="progress-bar"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const prevButton = document.getElementById('prev-slide');
+            const nextButton = document.getElementById('next-slide');
+            const progressBar = document.getElementById('progress-bar');
+            const slideContents = document.querySelectorAll('.slide-content');
+            let currentSlideIndex = -1; // Start at -1 to correctly initialize the first slide
+            const totalSlides = slides.length;
+
+            const imageSources = [
+                null,       // Slide 1: New Intro
+                "2.jpeg",   // Slide 2: Heartbeat Engine
+                "3.jpeg",   // Slide 3: Offense
+                "4.jpeg",   // Slide 4: Defense
+                "6.jpeg",   // Slide 6: Result/Bag Grows
+                "7.jpeg",   // Slide 7: Perfect Loop
+                "8.jpeg",   // Slide 8: Why the Token
+                "9.jpeg",   // Slide 9: Fair Launch
+                null,       // Slide 10: Roadmap Intro
+                "10.jpeg",  // Slide 11: Dump Matcher
+                "9.jpeg",   // Slide 12: Squad Buy (Placeholder)
+                "6.jpeg",   // Slide 13: Smart Accumulator (Placeholder)
+                null,       // Slide 14: Pitch Sentence
+                null        // Slide 15: The Choice
+            ];
+
+            function showSlide(index) {
+                if (index < 0 || index >= totalSlides || index === currentSlideIndex) return;
+                
+                if (currentSlideIndex !== -1) {
+                    slides[currentSlideIndex].classList.remove('active-slide');
+                }
+                
+                const nextSlideElement = slides[index];
+                const img = nextSlideElement.querySelector('.slide-img');
+                if (img && imageSources[index]) {
+                    img.src = imageSources[index];
+                }
+
+                currentSlideIndex = index;
+                nextSlideElement.classList.add('active-slide');
+                updateUI();
+            }
+
+            function updateUI() {
+                prevButton.style.display = currentSlideIndex === 0 ? 'none' : 'flex';
+                nextButton.style.display = currentSlideIndex === totalSlides - 1 ? 'none' : 'flex';
+                const progress = ((currentSlideIndex) / (totalSlides - 1)) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
+
+            function handleMouseMove(e) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+                e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+            }
+
+            slideContents.forEach(content => {
+                content.addEventListener('mousemove', handleMouseMove);
+            });
+
+            function nextSlide() { showSlide(currentSlideIndex + 1); }
+            function prevSlide() { showSlide(currentSlideIndex - 1); }
+
+            nextButton.addEventListener('click', nextSlide);
+            prevButton.addEventListener('click', prevSlide);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+                else if (e.key === 'ArrowLeft') prevSlide();
+            });
+
+            showSlide(0);
+        });
+
+        // --- Animated Background Logic ---
+        const canvas = document.getElementById('animated-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const particleCount = Math.floor((canvas.width * canvas.height) / 20000);
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.size = Math.random() * 1.2 + 0.5;
+                this.speedX = Math.random() * 0.3 - 0.15;
+                this.speedY = Math.random() * 0.3 - 0.15;
+            }
+            update() {
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+                this.x += this.speedX;
+                this.y += this.speedY;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(0, 191, 255, 0.4)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particles.length; a++) {
+                for (let b = a; b < particles.length; b++) {
+                    let distance = ((particles[a].x - particles[b].x) * (particles[a].x - particles[b].x))
+                                 + ((particles[a].y - particles[b].y) * (particles[a].y - particles[b].y));
+                    if (distance < (canvas.width / 8) * (canvas.height / 8)) {
+                        opacityValue = 1 - (distance / 25000);
+                        ctx.strokeStyle = `rgba(0, 191, 255, ${opacityValue * 0.2})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            connect();
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const newParticleCount = Math.floor((canvas.width * canvas.height) / 20000);
+            particles.length = 0;
+            for (let i = 0; i < newParticleCount; i++) {
+                particles.push(new Particle());
+            }
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

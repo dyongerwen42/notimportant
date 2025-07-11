@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUMPDUMP//ADMIN</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --cyan: #38E0F2;
+            --purple: #8041D9;
+            --blue: #5C82F2;
+            --pink: #F279A6;
+            --bg-dark: #0D0D0D;
+            --bg-panel: rgba(20, 20, 30, 0.6);
+            --border-color: rgba(56, 224, 242, 0.2);
+            --glow-color: rgba(56, 224, 242, 0.4);
+        }
+        html, body { min-height: 100vh; }
+        body { font-family: 'Share Tech Mono', monospace; background-color: var(--bg-dark); color: #EAEAEA; }
+        .glass-panel { background: var(--bg-panel); backdrop-filter: blur(12px) saturate(150%); border: 1px solid var(--border-color); box-shadow: 0 0 30px rgba(8, 217, 214, 0.1); position: relative; overflow: hidden; }
+        .scanline { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--cyan); filter: drop-shadow(0 0 4px var(--cyan)); animation: scan 5s linear infinite; }
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+        .social-link:hover { color: var(--cyan); transform: scale(1.1); filter: drop-shadow(0 0 5px var(--cyan));}
+        .blinking-cursor::after { content: '_'; animation: blink 1s step-end infinite; font-weight: bold; margin-left: 5px; color: var(--cyan); }
+        @keyframes blink { 50% { opacity: 0; } }
+        .btn { text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s ease; position: relative; overflow: hidden; font-weight: bold; }
+        .btn-primary { background: var(--cyan); color: #000; border: 1px solid var(--cyan); }
+        .btn-primary:hover:not(:disabled) { background: transparent; color: var(--cyan); box-shadow: 0 0 20px var(--cyan); }
+    </style>
+</head>
+<body>
+    <canvas id="animated-bg"></canvas>
+
+    <div id="app-container" class="p-4 sm:p-6 lg:p-8">
+        <header class="flex justify-between items-center pb-4 mb-4 border-b-2 border-[var(--border-color)]">
+             <h1 class="text-2xl sm:text-3xl blinking-cursor" style="color: var(--cyan);">[ADMIN_OVERVIEW]</h1>
+             <a href="/" class="btn btn-primary py-2 px-4 rounded-lg text-sm">[TERMINAL]</a>
+        </header>
+
+        <main>
+            <div id="task-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                </div>
+            <div id="no-tasks-message" class="hidden text-center text-gray-500 mt-20">
+                <p class="text-xl">[NO_ACTIVE_MISSIONS]</p>
+                <p>System is idle. Awaiting new tasks from the terminal.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const socket = io();
+        const taskGrid = document.getElementById('task-grid');
+        const noTasksMessage = document.getElementById('no-tasks-message');
+
+        socket.on('connect', () => {
+            console.log('Connected to admin channel. Requesting initial data...');
+            // ❗️ FIXED: Immediately request the list of all running tasks upon connecting.
+            socket.emit('requestInitialAdminData');
+        });
+
+        socket.on('tasksUpdate', (tasks) => {
+            // Clear the grid first
+            taskGrid.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                 noTasksMessage.classList.remove('hidden');
+            } else {
+                 noTasksMessage.classList.add('hidden');
+            }
+
+            tasks.forEach(task => {
+                const progressPercentage = (task.maxAmountSOL > 0) ? (task.totalSpentSOL / task.maxAmountSOL) * 100 : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'glass-panel p-4 rounded-xl flex flex-col space-y-3';
+                card.innerHTML = `
+                    <div class="scanline"></div>
+                    <div>
+                        <p class="text-xs text-gray-400">TARGET_MINT</p>
+                        <p class="text-sm break-all" style="color: var(--cyan);">${task.tokenAddress}</p>
+                    </div>
+                     <div>
+                        <p class="text-xs text-gray-400">OPERATOR_ID</p>
+                        <p class="text-sm break-all" style="color: var(--pink);">${task.operatorId}</p>
+                    </div>
+                    <div class="text-xs space-y-1">
+                        <p><strong>BUMP_AMT:</strong> <span class="float-right">${task.bumpAmountSOL} SOL</span></p>
+                        <p><strong>INACTIVITY:</strong> <span class="float-right">${task.inactivityThresholdSeconds} sec</span></p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center text-xs mb-1">
+                            <span>${task.totalSpentSOL.toFixed(4)} SOL</span>
+                            <span>MAX: ${task.maxAmountSOL.toFixed(4)} SOL</span>
+                        </div>
+                        <div class="w-full bg-gray-700/50 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full" style="width: ${progressPercentage}%; background-color: var(--cyan);"></div>
+                        </div>
+                    </div>
+                `;
+                taskGrid.appendChild(card);
+            });
+        });
+        
+        // --- Animated background from original page ---
+        const canvas = document.getElementById('animated-bg');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let particles = [];
+            const particleCount = Math.floor(canvas.width / 50);
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 1.5 + 0.5;
+                    this.speedX = (Math.random() * 2 - 1) * 0.2;
+                    this.speedY = (Math.random() * 2 - 1) * 0.2;
+                    this.opacity = Math.random() * 0.5 + 0.2;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+                    if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+                }
+                draw() {
+                    ctx.fillStyle = `rgba(56, 224, 242, ${this.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            function init() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                }
+                requestAnimationFrame(animate);
+            }
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                init();
+            });
+            init();
+            animate();
+        }
+    </script>
+</body>
+</html>

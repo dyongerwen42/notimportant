@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    /* --- Module Configuration --- */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": ".",
+    
+    /* --- Language & Environment --- */
+    "target": "es2020",
+    "lib": ["es2020", "dom"],
+    
+    /* --- Interop Constraints --- */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    /* --- Type Checking --- */
+    "strict": true,
+    
+    /* --- Emit --- */
+    "outDir": "build",
+    "resolveJsonModule": true,
+
+    /* --- Completeness --- */
+    "skipLibCheck": true
+  },
+  "include": ["server.ts"]
+}

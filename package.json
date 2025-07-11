@@ -1,0 +1,28 @@
+{
+  "name": "pump-terminal-server",
+  "version": "1.0.0",
+  "description": "Server to handle automated pump.fun tasks.",
+  "main": "server.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --watch server.ts"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.91.9",
+    "axios": "^1.7.2",
+    "bs58": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.2",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.5"
+  }
+}

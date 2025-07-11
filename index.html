@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUMPBUMP//TERMINAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root { --cyan: #08D9D6; --magenta: #FF2E63; --bg-dark: #02040a; --bg-panel: rgba(10, 20, 40, 0.5); --border-color: rgba(8, 217, 214, 0.25); --glow-color: rgba(8, 217, 214, 0.5); }
+        body { font-family: 'Share Tech Mono', monospace; background-color: var(--bg-dark); color: #EAEAEA; overflow-x: hidden; overflow-y: auto; }
+        #main-content { opacity: 0; transition: opacity 1s ease-in-out; }
+        #boot-screen { display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; font-size: 1.2rem; }
+        .boot-line { opacity: 0; animation: fadeIn 0.5s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        #animated-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; }
+        .glass-panel { background: var(--bg-panel); backdrop-filter: blur(16px) saturate(180%); border: 1px solid var(--border-color); box-shadow: 0 0 30px rgba(8, 217, 214, 0.15); position: relative; overflow: hidden; }
+        .scanline { position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--cyan); filter: drop-shadow(0 0 5px var(--cyan)); animation: scan 4s linear infinite; }
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+        .glitch { font-weight: 700; text-transform: uppercase; position: relative; color: var(--cyan); text-shadow: 0.02em 0 0 rgba(255, 46, 99, 0.5), -0.01em -0.02em 0 rgba(8, 217, 214, 0.5), 0.01em 0.02em 0 rgba(8, 217, 214, 0.5); animation: glitch 1500ms infinite; }
+        .glitch span { position: absolute; top: 0; left: 0; }
+        .glitch span:first-child { animation: glitch 1300ms infinite; clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); transform: translate(-0.01em, -0.005em); opacity: 0.7; }
+        .glitch span:last-child { animation: glitch 750ms infinite; clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%); transform: translate(0.005em, 0.01em); opacity: 0.7; }
+        @keyframes glitch { 0% { text-shadow: 0.02em 0 0 rgba(255, 46, 99, 0.5), -0.015em -0.01em 0 rgba(8, 217, 214, 0.5), -0.01em 0.02em 0 rgba(8, 217, 214, 0.5); } 25% { text-shadow: -0.02em -0.01em 0 rgba(255, 46, 99, 0.5), 0.01em 0.01em 0 rgba(8, 217, 214, 0.5), -0.02em -0.02em 0 rgba(8, 217, 214, 0.5); } 50% { text-shadow: 0.01em 0.02em 0 rgba(255, 46, 99, 0.5), 0.02em 0 0 rgba(8, 217, 214, 0.5), 0 -0.02em 0 rgba(8, 217, 214, 0.5); } 75% { text-shadow: -0.01em 0 0 rgba(255, 46, 99, 0.5), -0.01em -0.01em 0 rgba(8, 217, 214, 0.5), -0.01em -0.02em 0 rgba(8, 217, 214, 0.5); } 100% { text-shadow: 0.02em 0 0 rgba(255, 46, 99, 0.5), -0.015em -0.01em 0 rgba(8, 217, 214, 0.5), -0.01em 0.02em 0 rgba(8, 217, 214, 0.5); } }
+        .input-field { background-color: rgba(10, 14, 26, 0.8); border: 1px solid var(--border-color); transition: all 0.3s ease; }
+        .input-field:focus { border-color: var(--cyan); box-shadow: 0 0 15px var(--glow-color); }
+        .btn { text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255,255,255,0.2); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease; }
+        .btn:active:before { width: 200px; height: 200px; }
+        .btn-primary { background: var(--cyan); color: #000; border: 1px solid var(--cyan); }
+        .btn-primary:hover:not(:disabled) { background: transparent; color: var(--cyan); box-shadow: 0 0 20px var(--cyan); }
+        .btn-danger { background: var(--magenta); color: #000; border: 1px solid var(--magenta); }
+        .btn-danger:hover:not(:disabled) { background: transparent; color: var(--magenta); box-shadow: 0 0 20px var(--magenta); }
+        .social-link:hover { color: var(--cyan); transform: scale(1.1); filter: drop-shadow(0 0 5px var(--cyan));}
+    </style>
+</head>
+<body>
+    <canvas id="animated-bg"></canvas>
+    <div id="boot-screen">
+        <div id="boot-text-container"></div>
+    </div>
+    
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-3"></div>
+
+    <div id="main-content" class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-12">
+            <h1 class="glitch text-4xl md:text-5xl lg:text-6xl" data-text="PUMPBUMP//TERMINAL">
+                <span>PUMPBUMP//TERMINAL</span>
+                PUMPBUMP//TERMINAL
+                <span>PUMPBUMP//TERMINAL</span>
+            </h1>
+            <div class="flex justify-center items-center space-x-6 mt-6">
+                <a href="https://x.com/pumpbump" target="_blank" class="text-gray-400 social-link transition-all duration-300" data-sound="hover">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                </a>
+                <a href="https://t.me/pumpbump" target="_blank" class="text-gray-400 social-link transition-all duration-300" data-sound="hover">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.58c-.28 1.13-1.04 1.4-1.74.88L14.25 16l-4.12 3.9c-.78-.76-1.36.37-1.55-.55z"></path></svg>
+                </a>
+            </div>
+        </header>
+        
+        <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-40 hidden">
+            <div class="glass-panel rounded-xl shadow-2xl p-6 w-full max-w-md m-4 border-2 border-cyan-500/50">
+                <h3 class="text-2xl font-tech text-cyan-300">[AUTHORIZATION REQUIRED]</h3>
+                <p class="text-gray-400 mt-2">Verify mission parameters before execution.</p>
+                <div class="mt-4 space-y-2 text-sm bg-gray-900/70 p-4 rounded-lg font-tech">
+                    <p><strong class="text-gray-400">TARGET_MINT::</strong> <span id="modalToken" class="text-cyan-300 break-all"></span></p>
+                    <p><strong class="text-gray-400">BUMP_AMOUNT::</strong> <span id="modalBumpAmount" class="text-cyan-300"></span> SOL</p>
+                    <p><strong class="text-gray-400">INTERVAL::</strong> <span id="modalInterval" class="text-cyan-300"></span> seconds</p>
+                    <p><strong class="text-gray-400">MAX_SPEND::</strong> <span id="modalMaxAmount" class="text-cyan-300"></span> SOL</p>
+                    <p><strong class="text-amber-400">OPERATOR_ID::</strong> <span id="modalPublicKey" class="text-amber-300 break-all"></span></p>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button id="cancelButton" class="btn px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500" data-sound="click_alt">Abort</button>
+                    <button id="confirmButton" class="btn btn-primary px-4 py-2 rounded-lg flex items-center" data-sound="click">
+                        <span id="confirmButtonText">Execute</span>
+                        <svg id="confirmSpinner" class="animate-spin -mr-1 ml-3 h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div id="config-panel" class="lg:col-span-2 transition-opacity duration-500">
+                <div class="glass-panel p-6 rounded-xl shadow-lg h-full">
+                    <div class="scanline"></div>
+                    <h2 class="text-2xl mb-6 border-b-2 border-[var(--border-color)] pb-3 text-cyan-300">[MISSION_CONFIG]</h2>
+                    <div class="border border-red-500/50 bg-red-800/30 px-4 py-3 rounded-xl relative mb-6 text-center">
+                        <strong class="font-bold text-red-400">[SECURITY PROTOCOL]</strong>
+                        <p class="text-sm text-gray-300 mt-1">Always use a dedicated burner wallet. Never risk your main assets.</p>
+                    </div>
+                    <form id="taskForm" class="space-y-5">
+                        <input type="password" id="privateKey" name="privateKey" placeholder="BASE58 Burner Wallet Private Key" class="input-field w-full rounded-lg py-2 px-3" required data-sound="typing">
+                        <input type="text" id="tokenAddress" name="tokenAddress" placeholder="Target Token Mint Address" class="input-field w-full rounded-lg py-2 px-3" required data-sound="typing">
+                        <input type="number" id="bumpAmount" name="bumpAmount" step="0.001" min="0.001" placeholder="SOL per Cycle (e.g., 0.05)" class="input-field w-full rounded-lg py-2 px-3" required data-sound="typing">
+                        <input type="number" id="interval" name="interval" min="1" placeholder="Cycle Interval in Seconds (e.g., 5)" class="input-field w-full rounded-lg py-2 px-3" required data-sound="typing">
+                        <input type="number" id="maxAmount" name="maxAmount" step="0.01" min="0.01" placeholder="Max Total SOL to Spend (e.g., 1.5)" class="input-field w-full rounded-lg py-2 px-3" required data-sound="typing">
+                        <div class="pt-4 flex space-x-4">
+                            <button type="submit" id="startButton" class="w-full btn btn-primary font-bold py-3 px-4 rounded-lg">Engage</button>
+                            <button type="button" id="stopButton" class="w-full btn btn-danger font-bold py-3 px-4 rounded-lg hidden">Abort Mission</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3">
+                 <div class="glass-panel p-6 rounded-xl shadow-lg mb-8">
+                    <h2 class="text-2xl mb-4 border-b-2 border-[var(--border-color)] pb-3 text-cyan-300">[STRATEGIC_APPLICATIONS]</h2>
+                    <div class="space-y-4 text-sm text-gray-300">
+                        <p><strong class="text-cyan-300">// FOR YOUR TOKEN:</strong> Create consistent buying pressure to support your project. Increase trading volume, attract new investors, and build chart momentum for exchange listings.</p>
+                        <p><strong class="text-cyan-300">// FOR INVESTMENTS:</strong> Support projects you believe in. Defend price floors during dips and signal continuous community buying interest, strengthening your position.</p>
+                    </div>
+                </div>
+                
+                <div id="statusDashboard" class="glass-panel p-6 rounded-xl shadow-lg hidden">
+                     <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl text-cyan-300">[MISSION_ACTIVE]</h2>
+                    </div>
+                    <div class="bg-gray-900/70 p-4 rounded-lg space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-400">TARGET_ASSET: <span id="statusToken" class="text-cyan-300 text-sm break-all"></span></p>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">ALLOCATION_STATUS:</label>
+                            <div class="flex items-center justify-between text-sm">
+                                <p><span id="statusProgress" class="text-cyan-300">0</span> SOL</p>
+                                <p>MAX: <span id="statusMax" class="text-cyan-300">0</span> SOL</p>
+                            </div>
+                            <div class="w-full bg-gray-700/50 rounded-full h-2.5 mt-1">
+                                <div id="progressBar" class="bg-cyan-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="logContainerWrapper" class="glass-panel p-6 rounded-xl shadow-lg mt-8">
+                    <h2 class="text-2xl mb-4 border-b-2 border-[var(--border-color)] pb-3 text-cyan-300">[EVENT_STREAM]</h2>
+                    <div id="logContainer" class="h-96 overflow-y-auto pr-2 text-sm">
+                        <div id="logEntries"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- UI Enhancements ---
+        const bootScreen = document.getElementById('boot-screen');
+        const mainContent = document.getElementById('main-content');
+        window.onload = () => {
+            const bootLines = ["INITIALIZING...", "CALIBRATING...", "SYSTEM READY."];
+            let i = 0;
+            const bootInterval = setInterval(() => {
+                if (i < bootLines.length) {
+                    const p = document.createElement('p');
+                    p.className = 'boot-line text-cyan-300';
+                    p.textContent = bootLines[i++];
+                    document.getElementById('boot-text-container').appendChild(p);
+                } else {
+                    clearInterval(bootInterval);
+                    setTimeout(() => {
+                        bootScreen.style.opacity = '0';
+                        mainContent.style.opacity = '1';
+                        bootScreen.addEventListener('transitionend', () => bootScreen.style.display = 'none');
+                    }, 500);
+                }
+            }, 400);
+        };
+        // NOTE: Animated background and audio feedback code removed for brevity,
+        // but can be pasted back in here from your previous version.
+
+        // --- Core Application Logic ---
+        const API_URL = '/api';
+        const form = document.getElementById('taskForm');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const statusDashboard = document.getElementById('statusDashboard');
+        const logEntries = document.getElementById('logEntries');
+        const configPanel = document.getElementById('config-panel');
+        const modal = document.getElementById('confirmationModal');
+        
+        let activeTaskId = null;
+        
+        // --- SOCKET.IO INITIALIZATION ---
+        const socket = io();
+
+        // --- Event Listeners ---
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (activeTaskId) return showToast('A mission is already active.', 'warn');
+            
+            const taskData = {
+                privateKey: document.getElementById('privateKey').value,
+                tokenAddress: document.getElementById('tokenAddress').value,
+                bumpAmount: document.getElementById('bumpAmount').value,
+                interval: document.getElementById('interval').value,
+                maxAmount: document.getElementById('maxAmount').value,
+            };
+
+            if (Object.values(taskData).some(v => !v)) return showToast('Please fill out all fields.', 'error');
+            
+            document.getElementById('modalToken').textContent = taskData.tokenAddress;
+            document.getElementById('modalBumpAmount').textContent = taskData.bumpAmount;
+            document.getElementById('modalInterval').textContent = taskData.interval;
+            document.getElementById('modalMaxAmount').textContent = taskData.maxAmount;
+            document.getElementById('modalPublicKey').textContent = 'DERIVING...';
+            modal.classList.remove('hidden');
+
+            // Still use fetch for this one-time check
+            fetch(`${API_URL}/derive-pubkey`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ privateKey: taskData.privateKey }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.publicKey) {
+                    document.getElementById('modalPublicKey').textContent = data.publicKey;
+                } else {
+                    throw new Error(data.message || 'Invalid key');
+                }
+            })
+            .catch(err => {
+                document.getElementById('modalPublicKey').textContent = '[INVALID_KEY]';
+                showToast(err.message, 'error');
+            });
+        });
+        
+        document.getElementById('cancelButton').addEventListener('click', () => modal.classList.add('hidden'));
+
+        document.getElementById('confirmButton').addEventListener('click', () => {
+            modal.classList.add('hidden');
+            const taskData = {
+                privateKey: document.getElementById('privateKey').value,
+                tokenAddress: document.getElementById('tokenAddress').value,
+                bumpAmount: document.getElementById('bumpAmount').value,
+                interval: document.getElementById('interval').value,
+                maxAmount: document.getElementById('maxAmount').value,
+            };
+            
+            toggleUiState(true, true);
+            socket.emit('startTask', taskData);
+            setupDashboard(taskData);
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (!activeTaskId) return;
+            stopButton.disabled = true;
+            socket.emit('stopTask', { taskId: activeTaskId });
+        });
+
+        // --- Socket Event Handlers ---
+        socket.on('connect', () => {
+            addLog('Real-time connection established.', 'success');
+            loadSettingsFromLocalStorage(); // Load settings on successful connection
+        });
+
+        socket.on('taskStarted', ({ taskId }) => {
+            activeTaskId = taskId;
+            showToast('Mission engaged!', 'success');
+            toggleUiState(true, false);
+            saveSettingsToLocalStorage();
+        });
+
+        socket.on('log', (log) => {
+            addLog(log.message, log.type, log.timestamp);
+        });
+
+        socket.on('taskUpdate', (data) => {
+            updateDashboard(data);
+            if (data.status === 'completed' || data.status === 'stopped') {
+                showToast(`Mission ${data.status}!`, data.status === 'completed' ? 'success' : 'error');
+                resetUi();
+            }
+        });
+
+        socket.on('error', ({ message }) => {
+            showToast(`Error: ${message}`, 'error');
+            resetUi();
+        });
+
+        socket.on('disconnect', () => {
+            showToast('Connection lost to server!', 'error');
+            if (activeTaskId) {
+                addLog('Connection lost. Mission may have stopped.', 'error');
+                resetUi();
+            }
+        });
+
+        // --- UI Helper Functions ---
+        function resetUi() {
+            activeTaskId = null;
+            toggleUiState(false);
+            form.reset();
+            loadSettingsFromLocalStorage();
+        }
+
+        function toggleUiState(isMissionActive, isStarting = false) {
+            configPanel.style.opacity = isMissionActive ? 0.3 : 1;
+            statusDashboard.classList.toggle('hidden', !isMissionActive);
+            startButton.classList.toggle('hidden', isMissionActive && !isStarting);
+            stopButton.classList.toggle('hidden', !isMissionActive);
+            
+            form.querySelectorAll('input').forEach(input => input.disabled = isMissionActive);
+
+            if (isStarting) {
+                startButton.disabled = true;
+                startButton.textContent = 'Engaging...';
+            } else {
+                startButton.disabled = false;
+                startButton.textContent = 'Engage';
+                stopButton.disabled = false;
+            }
+        }
+
+        function setupDashboard(taskData) {
+            document.getElementById('statusToken').textContent = taskData.tokenAddress;
+            document.getElementById('statusMax').textContent = parseFloat(taskData.maxAmount).toFixed(4);
+            updateDashboard({ totalSpentSOL: 0, maxAmountSOL: parseFloat(taskData.maxAmount) });
+            logEntries.innerHTML = '';
+        }
+
+        function updateDashboard(data) {
+            document.getElementById('statusProgress').textContent = data.totalSpentSOL.toFixed(4);
+            const maxAmount = data.maxAmountSOL;
+            const progressPercentage = (maxAmount > 0) ? (data.totalSpentSOL / maxAmount) * 100 : 0;
+            document.getElementById('progressBar').style.width = `${Math.min(progressPercentage, 100)}%`;
+        }
+        
+        function addLog(message, type = 'info', timestamp) {
+            if(!timestamp) timestamp = new Date().toLocaleTimeString();
+            const colors = { info: 'text-gray-400', success: 'text-green-400', error: 'text-red-400', warn: 'text-yellow-400' };
+            const entry = document.createElement('div');
+            entry.innerHTML = `<p class="flex justify-between items-center"><span class="${colors[type]}">${message}</span><span class="text-xs text-gray-600">${timestamp}</span></p>`;
+            logEntries.prepend(entry);
+            logEntries.scrollTop = 0;
+        }
+
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const colors = { info: 'bg-blue-600', success: 'bg-green-600', error: 'bg-red-600', warn: 'bg-yellow-600' };
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-lg shadow-xl text-white ${colors[type]}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.5s ease';
+                toast.style.opacity = '0';
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 4000);
+        }
+        
+        function saveSettingsToLocalStorage() {
+            const settingsToSave = {
+                privateKey: document.getElementById('privateKey').value,
+                tokenAddress: document.getElementById('tokenAddress').value,
+                bumpAmount: document.getElementById('bumpAmount').value,
+                interval: document.getElementById('interval').value,
+                maxAmount: document.getElementById('maxAmount').value,
+            };
+            localStorage.setItem('pumpbump_settings', JSON.stringify(settingsToSave));
+        }
+
+        function loadSettingsFromLocalStorage() {
+            const savedSettings = localStorage.getItem('pumpbump_settings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('privateKey').value = settings.privateKey || '';
+                document.getElementById('tokenAddress').value = settings.tokenAddress || '';
+                document.getElementById('bumpAmount').value = settings.bumpAmount || '';
+                document.getElementById('interval').value = settings.interval || '';
+                document.getElementById('maxAmount').value = settings.maxAmount || '';
+                addLog('Loaded previous settings from localStorage.', 'info');
+            }
+        }
+        
+        addLog('SYSTEM BOOT COMPLETE. AWAITING COMMAND.', 'info');
+    </script>
+</body>
+</html>
