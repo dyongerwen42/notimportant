@@ -410,6 +410,9 @@
         }
         
         function addLog(message, type = 'info', timestamp) {
+            // Get the scrollable container element
+            const logContainer = document.getElementById('logContainer');
+
             if(!timestamp) timestamp = new Date().toLocaleTimeString();
             const colors = { 
                 info: 'text-gray-400', 
@@ -419,7 +422,12 @@
             };
             const entry = document.createElement('div');
             entry.innerHTML = `<p class="flex justify-between items-center"><span class="${colors[type]}">${message}</span><span class="text-xs text-gray-600">${timestamp}</span></p>`;
-            logEntries.prepend(entry);
+            
+            // 1. Append the new message to the bottom
+            logEntries.append(entry);
+
+            // 2. Automatically scroll the container to the bottom
+            logContainer.scrollTop = logContainer.scrollHeight;
         }
 
         function showToast(message, type = 'info') {
