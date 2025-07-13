@@ -4,7 +4,7 @@ import WebSocket from 'ws';
 const ws = new WebSocket('wss://pumpportal.fun/api/data');
 
 // De contract-address van de coin die je wilt volgen
-const coinToTrack = "2oMLiB2y2HnXxSXXfC6eKAifud8i8nK3yizump";
+const coinToTrack = "HTdw4NsTRCBqGjSEA4T1JuEdMzihuAELoCSH1ooZpump";
 
 // Wordt uitgevoerd wanneer de verbinding is geopend
 ws.on('open', function open() {
