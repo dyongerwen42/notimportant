@@ -6,7 +6,7 @@
     <title>PumpBump//TERMINAL</title>
     
     <meta name="description" content="The PumpBump//TERMINAL is a strategic tool for Solana traders to support tokens by creating consistent buying pressure and defending price floors.">
-    <meta name="keywords" content="PumpBump, Pump.fun, Solana, crypto, trading bot, buying pressure, crypto terminal, degen, token launch">
+    <meta name="keywords" content="PumpBump, Pump.fun, Solana, crypto, trading bot, buying pressure, crypto terminal, degen, token launch, sell matcher">
     <meta name="author" content="PumpBump">
     
     <meta property="og:title" content="PumpBump//TERMINAL">
@@ -54,16 +54,26 @@
         .social-link:hover { color: var(--cyan); transform: scale(1.1); filter: drop-shadow(0 0 5px var(--cyan));}
         .blinking-cursor::after { content: '_'; animation: blink 1s step-end infinite; font-weight: bold; margin-left: 5px; color: var(--cyan); }
         @keyframes blink { 50% { opacity: 0; } }
+        
+        /* Corrected styles for the Event Stream */
+        #logContainer {
+            overflow-y: auto;   /* Adds a scrollbar only when needed */
+            flex-grow: 1;       /* Ensures it fills the space left by the title */
+        }
+
+        .form-checkbox { appearance: none; background-color: rgba(10, 10, 15, 0.8); border: 1px solid var(--border-color); width: 1.25em; height: 1.25em; border-radius: 4px; display: inline-block; vertical-align: middle; position: relative; cursor: pointer; transition: all 0.3s ease; }
+        .form-checkbox:checked { background-color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 15px var(--glow-color); }
+        .form-checkbox:checked::after { content: '✔'; font-size: 0.8em; color: black; font-weight: bold; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
     </style>
 </head>
 <body>
     <div style="background: linear-gradient(90deg, var(--purple), var(--cyan)); padding: 1rem; text-align: center; border-bottom: 2px solid var(--cyan); box-shadow: 0 4px 20px var(--glow-color);">
         <div style="max-width: 900px; margin: auto; color: var(--bg-dark); font-family: 'Inter', sans-serif;">
             <h2 style="font-family: 'Share Tech Mono', monospace; font-size: 1.8rem; margin: 0 0 0.5rem 0; text-shadow: none; animation: none; color: #fff;">
-                WE ARE OFFICIALLY LIVE!
+                WE ARE LIVE ON PUMP.FUN!
             </h2>
             <p style="margin: 0; font-size: 1.1rem; line-height: 1.5; font-weight: bold;">
-                Our official coin, $PBTER, launched on Saturday, July 13th. You can now trade it on Pump.fun.
+                Our official coin, $PBTER, is now trading live.
             </p>
              <p style="margin: 0.75rem 0; font-size: 1rem; line-height: 1.4; background: rgba(255, 255, 0, 0.8); color: #000; padding: 0.5rem; border-radius: 6px; font-weight: bold;">
                 <span style="font-size: 1.5rem; vertical-align: middle; margin-right: 0.5rem;">⚠️</span>
@@ -116,25 +126,12 @@
                             <div id="cost-breakdown-content" class="hidden px-3 pb-3">
                                 <div class="text-xs text-gray-300 mt-1 space-y-1 text-center">
                                     <p>Each swap includes the standard 1% Pump.fun fee plus a small <strong class="text-white">0.5%</strong> for terminal development.</p>
-                                    <p class="text-amber-400"><strong>Temporary Beta Fee:</strong> A tiny <strong class="text-amber-300">0.2%</strong> fee ensures high-speed node access and will be removed at 500 users!</p>
                                     <p>You also pay the tiny, standard <strong class="text-white">Solana network fee</strong> for each transaction.</p>
-                                </div>
-                                <hr class="border-gray-700 my-3">
-                                <div>
-                                    <strong class="font-bold text-blue-300 text-xs block text-center">[EXAMPLE: SPENDING 1 SOL - HIGH PRIORITY]</strong>
-                                    <p class="text-xs text-gray-400 italic text-center">Scenario: Bumping with 0.1 SOL ten times.</p>
-                                    <div class="text-left text-xs space-y-1 mt-2 bg-black/25 p-2 rounded-lg">
-                                        <p><strong>Your Investment:</strong><span class="float-right">1.0000 SOL</span></p>
-                                        <p><strong>Total Fees (1.7%):</strong><span class="float-right">0.0170 SOL</span></p>
-                                        <p><strong>Est. Network Gas:</strong><span class="float-right text-green-400">~0.0003 SOL</span></p>
-                                        <hr class="border-gray-600">
-                                        <p><strong>Total Extra Cost:</strong><span class="float-right font-bold text-white">~0.0173 SOL</span></p>
-                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <form id="taskForm" class="space-y-3 mt-auto">
+                        <form id="taskForm" class="space-y-4 mt-auto">
                             <div>
                                 <label for="privateKey" class="block text-sm font-medium text-gray-300 mb-1">Burner Wallet Private Key</label>
                                 <input type="password" id="privateKey" name="privateKey" placeholder="BASE58 Private Key" class="input-field w-full rounded-lg py-2 px-3 text-sm" required>
@@ -151,10 +148,25 @@
                                 <label for="inactivityInterval" class="block text-sm font-medium text-gray-300 mb-1">Buy If No Buys For (Sec)</label>
                                 <input type="number" id="inactivityInterval" name="inactivityInterval" min="5" placeholder="e.g., 60" class="input-field w-full rounded-lg py-2 px-3 text-sm" required>
                             </div>
+
+                            <div class="border-t-2 border-dashed border-[var(--border-color)] my-4"></div>
+
+                            <div class="space-y-3 p-3 rounded-lg bg-black/25 border border-purple-500/30">
+                                <div class="flex items-center">
+                                    <input id="bumpMatcherCheckbox" type="checkbox" class="form-checkbox mr-3">
+                                    <label for="bumpMatcherCheckbox" class="text-sm font-medium text-gray-300 select-none">Enable Bump Matcher</label>
+                                </div>
+                                <div id="maxSellField" class="hidden">
+                                    <label for="maxSellToMatch" class="block text-sm font-medium text-gray-300 mb-1">Max Sell to Match (SOL)</label>
+                                    <input type="number" id="maxSellToMatch" name="maxSellToMatch" step="0.01" min="0.01" placeholder="e.g., 0.5" class="input-field w-full rounded-lg py-2 px-3 text-sm">
+                                </div>
+                            </div>
+                            
                             <div>
                                 <label for="maxAmount" class="block text-sm font-medium text-gray-300 mb-1">Max Total SOL Spend</label>
                                 <input type="number" id="maxAmount" name="maxAmount" step="0.01" min="0.01" placeholder="e.g., 1.5" class="input-field w-full rounded-lg py-2 px-3 text-sm" required>
                             </div>
+
                             <div class="pt-2 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                                 <button type="submit" id="startButton" class="w-full btn btn-primary py-2 px-4 rounded-lg">Engage</button>
                                 <button type="button" id="stopButton" class="w-full btn btn-secondary py-2 px-4 rounded-lg hidden">Abort Mission</button>
@@ -166,8 +178,8 @@
                     <div class="glass-panel p-6 rounded-xl shadow-lg">
                         <h2 class="text-xl mb-2 border-b-2 border-[var(--border-color)] pb-2" style="color: var(--cyan);">[STRATEGIC_APPLICATIONS]</h2>
                         <div class="space-y-2 text-xs text-gray-300">
-                            <p><strong style="color: var(--cyan);">// FOR YOUR TOKEN:</strong> Create consistent buying pressure to support your project. Increase trading volume and build chart momentum.</p>
-                            <p><strong style="color: var(--cyan);">// FOR INVESTMENTS:</strong> Defend price floors during dips and signal continuous community buying interest, strengthening your position.</p>
+                            <p><strong style="color: var(--cyan);">// FOR YOUR TOKEN:</strong> Create consistent buying pressure. Increase trading volume and build chart momentum.</p>
+                            <p><strong style="color: var(--purple);">// BUMP MATCHER:</strong> Automatically buy back sells to defend your chart and counter dumps, maintaining price stability.</p>
                         </div>
                     </div>
                     
@@ -188,12 +200,14 @@
                             </div>
                         </div>
                     </div>
-                    <div id="logContainerWrapper" class="glass-panel p-6 rounded-xl shadow-lg flex flex-col min-h-0 h-96 lg:h-auto lg:flex-grow">
+                    
+                    <div id="logContainerWrapper" class="glass-panel p-6 rounded-xl shadow-lg flex flex-col min-h-0 max-h-[450px] lg:max-h-[600px] lg:flex-grow">
                         <h2 class="text-xl mb-4 border-b-2 border-[var(--border-color)] pb-2 blinking-cursor" style="color: var(--cyan);">[EVENT_STREAM]</h2>
-                        <div id="logContainer" class="flex-grow overflow-y-auto pr-2 text-sm">
+                        <div id="logContainer" class="flex-grow pr-2 text-sm">
                             <div id="logEntries"></div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </main>
@@ -214,6 +228,11 @@
                 <p><strong class="text-gray-400">TARGET_MINT::</strong> <span id="modalToken" class="break-all" style="color: var(--cyan);"></span></p>
                 <p><strong class="text-gray-400">PURCHASE_AMOUNT::</strong> <span id="modalBumpAmount" style="color: var(--cyan);"></span> SOL</p>
                 <p><strong class="text-gray-400">INACTIVITY_THRESHOLD::</strong> <span id="modalInactivityInterval" style="color: var(--cyan);"></span> seconds</p>
+                <div id="modalBumpMatcherContainer">
+                    <p><strong class="text-gray-400">BUMP_MATCHER::</strong> <span id="modalBumpMatcher" style="color: var(--purple);"></span></p>
+                    <p id="modalMaxSellContainer" class="hidden"><strong class="text-gray-400">MAX_SELL_MATCH::</strong> <span id="modalMaxSell" style="color: var(--purple);"></span> SOL</p>
+                </div>
+                <hr class="border-gray-600 my-1">
                 <p><strong class="text-gray-400">MAX_SPEND::</strong> <span id="modalMaxAmount" style="color: var(--cyan);"></span> SOL</p>
                 <p><strong class="text-amber-400">OPERATOR_ID::</strong> <span id="modalPublicKey" class="text-amber-300 break-all"></span></p>
             </div>
@@ -237,6 +256,8 @@
         const configPanel = document.getElementById('config-panel');
         const modal = document.getElementById('confirmationModal');
         const confirmButton = document.getElementById('confirmButton');
+        const bumpMatcherCheckbox = document.getElementById('bumpMatcherCheckbox');
+        const maxSellField = document.getElementById('maxSellField');
         const API_URL = '/api';
         
         // --- Applicatie Status ---
@@ -259,15 +280,38 @@
                 bumpAmount: document.getElementById('bumpAmount').value,
                 inactivityInterval: document.getElementById('inactivityInterval').value,
                 maxAmount: document.getElementById('maxAmount').value,
+                bumpMatcherEnabled: document.getElementById('bumpMatcherCheckbox').checked,
+                maxSellToMatch: document.getElementById('maxSellToMatch').value
             };
 
-            if (Object.values(taskData).some(v => !v)) return showToast('Please fill out all fields.', 'error');
+            const coreFields = ['privateKey', 'tokenAddress', 'bumpAmount', 'inactivityInterval', 'maxAmount'];
+            if (coreFields.some(field => !taskData[field])) {
+                return showToast('Please fill out all required fields.', 'error');
+            }
+
+            if (taskData.bumpMatcherEnabled && !taskData.maxSellToMatch) {
+                return showToast('Please enter the "Max Sell to Match" amount.', 'error');
+            }
             
+            // Populate Modal
             document.getElementById('modalToken').textContent = taskData.tokenAddress;
             document.getElementById('modalBumpAmount').textContent = taskData.bumpAmount;
             document.getElementById('modalInactivityInterval').textContent = taskData.inactivityInterval;
             document.getElementById('modalMaxAmount').textContent = taskData.maxAmount;
             
+            const modalBumpMatcher = document.getElementById('modalBumpMatcher');
+            const modalMaxSellContainer = document.getElementById('modalMaxSellContainer');
+            const modalMaxSell = document.getElementById('modalMaxSell');
+
+            if (taskData.bumpMatcherEnabled) {
+                modalBumpMatcher.textContent = 'ENABLED';
+                modalMaxSell.textContent = taskData.maxSellToMatch;
+                modalMaxSellContainer.classList.remove('hidden');
+            } else {
+                modalBumpMatcher.textContent = 'DISABLED';
+                modalMaxSellContainer.classList.add('hidden');
+            }
+
             setConfirmButtonState(true, 'Verifying...');
             document.getElementById('modalPublicKey').textContent = 'DERIVING...';
             modal.classList.remove('hidden');
@@ -292,6 +336,11 @@
             });
         });
         
+        bumpMatcherCheckbox.addEventListener('change', () => {
+            maxSellField.classList.toggle('hidden', !bumpMatcherCheckbox.checked);
+            document.getElementById('maxSellToMatch').required = bumpMatcherCheckbox.checked;
+        });
+
         document.getElementById('cancelButton').addEventListener('click', () => {
             modal.classList.add('hidden');
             resetModalButton();
@@ -302,12 +351,14 @@
             setConfirmButtonState(true, 'Engaging...');
             setTimeout(() => modal.classList.add('hidden'), 300);
 
-            const taskData = {
+             const taskData = {
                 privateKey: document.getElementById('privateKey').value,
                 tokenAddress: document.getElementById('tokenAddress').value,
                 bumpAmount: document.getElementById('bumpAmount').value,
                 inactivityInterval: document.getElementById('inactivityInterval').value,
                 maxAmount: document.getElementById('maxAmount').value,
+                bumpMatcherEnabled: document.getElementById('bumpMatcherCheckbox').checked,
+                maxSellToMatch: document.getElementById('maxSellToMatch').value
             };
             
             socket.emit('startTask', taskData);
@@ -410,23 +461,18 @@
         }
         
         function addLog(message, type = 'info', timestamp) {
-            // Get the scrollable container element
             const logContainer = document.getElementById('logContainer');
-
             if(!timestamp) timestamp = new Date().toLocaleTimeString();
             const colors = { 
                 info: 'text-gray-400', 
                 success: 'text-green-400', 
                 error: 'text-red-400', 
-                warn: 'text-yellow-400' 
+                warn: 'text-yellow-400',
+                special: 'text-purple-400'
             };
             const entry = document.createElement('div');
-            entry.innerHTML = `<p class="flex justify-between items-center"><span class="${colors[type]}">${message}</span><span class="text-xs text-gray-600">${timestamp}</span></p>`;
-            
-            // 1. Append the new message to the bottom
+            entry.innerHTML = `<p class="flex justify-between items-center"><span class="${colors[type] || 'text-gray-400'}">${message}</span><span class="text-xs text-gray-600">${timestamp}</span></p>`;
             logEntries.append(entry);
-
-            // 2. Automatically scroll the container to the bottom
             logContainer.scrollTop = logContainer.scrollHeight;
         }
 
@@ -451,6 +497,8 @@
                 bumpAmount: document.getElementById('bumpAmount').value,
                 inactivityInterval: document.getElementById('inactivityInterval').value,
                 maxAmount: document.getElementById('maxAmount').value,
+                bumpMatcherEnabled: document.getElementById('bumpMatcherCheckbox').checked,
+                maxSellToMatch: document.getElementById('maxSellToMatch').value
             };
             localStorage.setItem('pumpbump_settings', JSON.stringify(settingsToSave));
         }
@@ -464,11 +512,23 @@
                 document.getElementById('bumpAmount').value = settings.bumpAmount || '';
                 document.getElementById('inactivityInterval').value = settings.inactivityInterval || '';
                 document.getElementById('maxAmount').value = settings.maxAmount || '';
+
+                const bumpMatcherCheckbox = document.getElementById('bumpMatcherCheckbox');
+                const maxSellToMatchInput = document.getElementById('maxSellToMatch');
+                const maxSellField = document.getElementById('maxSellField');
+
+                bumpMatcherCheckbox.checked = settings.bumpMatcherEnabled || false;
+                maxSellToMatchInput.value = settings.maxSellToMatch || '';
+                maxSellField.classList.toggle('hidden', !bumpMatcherCheckbox.checked);
+                maxSellToMatchInput.required = bumpMatcherCheckbox.checked;
+
                 addLog('Loaded previous settings from localStorage.', 'info');
             }
         }
         
+        // Initial Page Load
         addLog('SYSTEM READY. AWAITING COMMAND.', 'info');
+
     </script>
 </body>
 </html>
